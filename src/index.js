@@ -53,7 +53,7 @@
                 // @todo: maybe extend, might just ignore if an object is passed after initialization
             }
         },
-        triggerEvent: function(sourceName, eventName, data){
+        triggerEvent: function(eventName, sourceName, data){
             var sourceWindow, e, objToSend = {};
             if(sourceName === 'parent'){
                 sourceWindow = window.parent;
@@ -106,14 +106,16 @@
             this._options[name] = value;
         },
         _handleEventListener: function(e){
+
             // If the data was stringified we need to parse it, this option should match on both sides.
+            var data = e.data;
             if(this._options.stringify && typeof e.data === 'string'){
-                e.data = JSON.parse(e.data);
+                data = JSON.parse(e.data);
             }
 
             // If there is a listener for this event name, call it and pass the data
-            if(this._listeners[e.data.eventName]){
-                this._listeners[e.data.eventName](e.data.data);
+            if(this._listeners[data.eventName]){
+                this._listeners[data.eventName](data.data);
             }
         }
     };
@@ -156,20 +158,34 @@
             if(arguments[0] === 'trigger' && arguments.length >= 3){
                 PrivatePluginName.triggerEvent(arguments[1], arguments[2], arguments[3]);
             }
+            
+            if(arguments[0] === 'addSource' && arguments.length >= 3){
+                PrivatePluginName._addSource(arguments[1], arguments[2]);
+            }
+
+            if(arguments[0] === 'addEvent' && arguments.length >= 3){
+                PrivatePluginName._addEvent(arguments[1], arguments[2]);
+            }
+
+            if(arguments[0] === 'addListener' && arguments.length >= 3){
+                PrivatePluginName._addListener(arguments[1], arguments[2]);
+            }
         } else if (arguments.length == 1) {
             PrivatePluginName.initialize(options);
         } else {
 
         }
+        return PublicInstance;
     };
 
-    PublicInstance.prototype.trigger = function(){
+    PublicInstance.trigger = function(){
         if(arguments.length >= 2){
             PrivatePluginName.triggerEvent(arguments[0], arguments[1], arguments[2]);
         } else {
             PrivatePluginName.log('Invalid trigger, need both an event name and a source name', true);
         }
+        return PublicInstance;
     };
 
-    window.EnhancedPostMessage = new PublicInstance();
+    window.EnhancedPostMessage = PublicInstance;
 })(window);
